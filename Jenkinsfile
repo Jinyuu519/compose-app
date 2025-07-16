@@ -4,9 +4,9 @@ pipeline {
   environment {
     REGISTRY       = 'jinyuu519'
     IMAGE_NAME     = 'compose-app'
-    DOCKER_CRED    = 'dockerhub-credentials'
+    DOCKER_CRED    = 'dockerhub-creds'
     KUBE_CRED      = 'kubeconfig'
-    HELM_CHART_DIR = 'k8s/k8s-ngi/compose-app'
+    HELM_CHART_DIR = 'charts/compose-app'
     NAMESPACE      = 'default'
     VERSION        = "v1.0.${BUILD_NUMBER}"
   }

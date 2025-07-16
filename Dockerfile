@@ -1,25 +1,39 @@
-FROM node:16-alpine
+FROM jenkins/jenkins:lts
 
-# 安装 bash
-RUN apk add --no-cache bash
+USER root
 
 # 设置工作目录
 WORKDIR /app
 
-# 设置生产环境变量
-ENV NODE_ENV=production
+# 安装必要工具：Docker CLI、Node.js、npm、curl、git、Helm、kubectl
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        docker.io \
+        nodejs \
+        npm \
+        curl \
+        git \
+        unzip && \
+    rm -rf /var/lib/apt/lists/*
 
-# 拷贝并安装依赖（仅 package*.json）
-COPY src/package*.json ./
-RUN npm install --omit=dev
+# 安装 Docker Compose v2（CLI 插件方式）
+RUN mkdir -p /usr/lib/docker/cli-plugins && \
+    curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 \
+      -o /usr/lib/docker/cli-plugins/docker-compose && \
+    chmod +x /usr/lib/docker/cli-plugins/docker-compose
 
-# 拷贝应用源码与脚本
-COPY src/ ./
-COPY wait-for-it.sh ./
-RUN chmod +x wait-for-it.sh
+# 安装 Helm CLI
+RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
-# 暴露端口
-EXPOSE 3000
+# 安装 kubectl（与 Helm 搭配部署）
+RUN curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && \
+    rm kubectl
 
-# 启动命令：等待 PostgreSQL 就绪后运行服务
-CMD ["sh","-c","./wait-for-it.sh ${PGHOST:-postgres-postgresql}:${PGPORT:-5432} -- npm start"]
+# npm 缓存优化（非必须）
+RUN npm config set cache /tmp/npm-cache --global
+
+# 添加 Jenkins 用户到 Docker 组（避免权限问题）
+RUN usermod -aG docker jenkins
+
+USER jenkins
