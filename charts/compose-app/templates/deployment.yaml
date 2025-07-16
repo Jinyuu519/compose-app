@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "compose-app.fullname" . }}
+  labels:
+    {{- include "compose-app.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "compose-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "compose-app.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "compose-app.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.env }}
+          env:
+            {{- toYaml .Values.env | nindent 12 }}
+          {{- end }}
+          # Secret 注入
+          envFrom:
+            - secretRef:
+                name: {{ include "compose-app.fullname" . }}-secret
+
+          # 暴露端口
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+
+          livenessProbe:
+            httpGet:
+                path: /health
+                port: 3000
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 10
+
+
+          # （可选）资源限制
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

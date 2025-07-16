@@ -1,0 +1,5 @@
+node_modules/
+jenkins_home/
+*.log
+*.tmp
+*.env
