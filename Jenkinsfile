@@ -30,7 +30,8 @@ stage('Install & Test') {
     stage('Build Image') {
       steps {
         script {
-          dockerImage = docker.build("${REGISTRY}/${IMAGE_NAME}:${VERSION}", 'docker/compose-app')
+          dockerImage = docker.build("${REGISTRY}/${IMAGE_NAME}:${VERSION}", '.')
+
         }
       }
     }
