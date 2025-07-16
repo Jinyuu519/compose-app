@@ -37,15 +37,15 @@ pipeline {
       }
     }
 
-    stage('Push Image') {
-      steps {
-        script {
-          docker.withDockerRegistry(credentialsId: DOCKER_CRED, url: '') {
-            dockerImage.push("${VERSION}")
-          }
-        }
+stage('Push Image') {
+  steps {
+    script {
+      docker.withRegistry('https://index.docker.io/v1/', DOCKER_CRED) {
+        dockerImage.push("${VERSION}")
       }
     }
+  }
+}
 
     stage('Helm Deploy') {
       steps {
