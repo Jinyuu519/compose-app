@@ -39,9 +39,10 @@ stage('Install & Test') {
 stage('Push Image') {
   steps {
     script {
-      docker.withRegistry('https://index.docker.io/v1/', DOCKER_CRED) {
-        dockerImage.push("${VERSION}")
-        dockerImage.push('latest')
+      docker.withDockerRegistry(credentialsId: 'docker-hub-cred-id', url: '') {
+  dockerImage.push("${VERSION}")
+}
+
       }
     }
   }
